@@ -1,7 +1,7 @@
 JAVAC = javac
 JAVA = java
 MAIN_CLASS = GatorTicketMaster
-INPUT_FILE = input_1_test_case.txt
+INPUT_FILE = input_3_test_case.txt
 OUTPUT_FILE = $(subst .txt,_output.txt,$(INPUT_FILE))
 
 all: compile run
