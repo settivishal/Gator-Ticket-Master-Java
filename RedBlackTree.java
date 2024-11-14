@@ -2,8 +2,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RedBlackTree {
-    private static final boolean RED = true;
-    private static final boolean BLACK = false;
+    private static final boolean RED    = true;
+    private static final boolean BLACK  = false;
 
     static class Node {
         int userID;
@@ -14,7 +14,7 @@ public class RedBlackTree {
         Node(int userID, int seatID) {
             this.userID = userID;
             this.seatID = seatID;
-            this.color = RED;
+            this.color  = RED;
         }
     }
 
@@ -26,7 +26,7 @@ public class RedBlackTree {
      */
     private void rotateLeft(Node node) {
         Node rightChild = node.right;
-        node.right = rightChild.left;
+        node.right      = rightChild.left;
 
         if (rightChild.left != null) {
             rightChild.left.parent = node;
@@ -47,7 +47,7 @@ public class RedBlackTree {
 
         // Set the left child of the right child to the node
         rightChild.left = node;
-        node.parent = rightChild;
+        node.parent     = rightChild;
     }
 
     /**
@@ -56,9 +56,9 @@ public class RedBlackTree {
      */
     private void rotateRight(Node node) {
         // The right child of the node is the left child of its parent
-        Node leftChild = node.left;
+        Node leftChild  = node.left;
         // Set the left child of the node to the right child of its left child
-        node.left = leftChild.right;
+        node.left       = leftChild.right;
 
         // Set the parent of the right child of the left child to the node
         if (leftChild.right != null) {
@@ -82,7 +82,7 @@ public class RedBlackTree {
         // Set the right child of the left child to the node
         leftChild.right = node;
         // Set the parent of the node to the left child
-        node.parent = leftChild;
+        node.parent     = leftChild;
     }
 
     /**
@@ -93,9 +93,9 @@ public class RedBlackTree {
      */
     public void insert(int userID, int seatID) {
         // Create a new node with the given userID and seatID
-        Node node = new Node(userID, seatID);
-        Node parent = null;
-        Node current = root;
+        Node node       = new Node(userID, seatID);
+        Node parent     = null;
+        Node current    = root;
 
         // Traverse the tree to find the correct position for the new node
         while (current != null) {
@@ -135,10 +135,10 @@ public class RedBlackTree {
 
                 // If the sibling of the parent is also red, change the parent and its sibling to black, and the grandparent to red. Move the node up one level to the grandparent.
                 if (siblingOfParent != null && siblingOfParent.color == RED) {
-                    node.parent.color = BLACK;
-                    siblingOfParent.color = BLACK;
-                    node.parent.parent.color = RED;
-                    node = node.parent.parent;
+                node.parent.color               = BLACK;
+                    siblingOfParent.color       = BLACK;
+                    node.parent.parent.color    = RED;
+                    node                        = node.parent.parent;
                 } else {
                     // If the node is the right child of the parent, rotate the parent to the left first.
                     if (node == node.parent.right) {
@@ -155,17 +155,17 @@ public class RedBlackTree {
                 Node siblingOfParent = node.parent.parent.left;
 
                 if (siblingOfParent != null && siblingOfParent.color == RED) {
-                    node.parent.color = BLACK;
-                    siblingOfParent.color = BLACK;
-                    node.parent.parent.color = RED;
-                    node = node.parent.parent;
+                    node.parent.color           = BLACK;
+                    siblingOfParent.color       = BLACK;
+                    node.parent.parent.color    = RED;
+                    node                        = node.parent.parent;
                 } else {
                     if (node == node.parent.left) {
                         node = node.parent;
                         rotateRight(node);
                     }
-                    node.parent.color = BLACK;
-                    node.parent.parent.color = RED;
+                    node.parent.color           = BLACK;
+                    node.parent.parent.color    = RED;
                     rotateLeft(node.parent.parent);
                 }
             }
@@ -231,9 +231,9 @@ public class RedBlackTree {
         if (nodeToRemove.parent == null) {
             root = replacementChild;
         } else if (nodeToRemove == nodeToRemove.parent.left) {
-            nodeToRemove.parent.left = replacementChild;
+            nodeToRemove.parent.left    = replacementChild;
         } else {
-            nodeToRemove.parent.right = replacementChild;
+            nodeToRemove.parent.right   = replacementChild;
         }
 
         // Copy nodeToRemove's data to the node if necessary
@@ -267,8 +267,8 @@ public class RedBlackTree {
         // Otherwise, the successor is the parent of the node, or one of its parents if the node is the rightmost node in its subtree
         Node parent = node.parent;
         while (parent != null && node == parent.right) {
-            node = parent;
-            parent = parent.parent;
+            node    = parent;
+            parent  = parent.parent;
         }
         return parent;
     }
@@ -297,8 +297,8 @@ public class RedBlackTree {
                         (siblingNode.right == null || siblingNode.right.color == BLACK)) {
                     siblingNode.color = RED;
                     // If the sibling node has no red children, color the sibling node red
-                    node = parent;
-                    parent = node.parent;
+                    node    = parent;
+                    parent  = node.parent;
                 } else {
                     if (siblingNode.right == null || siblingNode.right.color == BLACK) {
                         if (siblingNode.left != null) {
@@ -333,8 +333,8 @@ public class RedBlackTree {
 
                 if ((siblingNode.right == null || siblingNode.right.color == BLACK) &&(siblingNode.left == null || siblingNode.left.color == BLACK)) {
                     siblingNode.color = RED;
-                    node = parent;
-                    parent = node.parent;
+                    node    = parent;
+                    parent  = node.parent;
                 } else {
                     if (siblingNode.left == null || siblingNode.left.color == BLACK) {
                         if (siblingNode.right != null) {

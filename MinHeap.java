@@ -6,11 +6,11 @@ import java.util.Map;
 
 public class MinHeap {
     private ArrayList<Object> heap;
-    private Map<Integer, Integer> idToPositionMap; // Maps userID to index in heap
+    private Map<Integer, Integer> userIndexMap; // Maps userID to index in heap
 
     public MinHeap() {
-        heap = new ArrayList<>();
-        idToPositionMap = new HashMap<>();
+        heap            = new ArrayList<>();
+        userIndexMap    = new HashMap<>();
     }
 
     /**
@@ -24,7 +24,7 @@ public class MinHeap {
 
         // If the object is a WaitlistEntry, add its userID to the map
         if (obj instanceof GatorTicketMaster.WaitlistEntry) {
-            idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) obj).userID, current);
+            userIndexMap.put(((GatorTicketMaster.WaitlistEntry) obj).userID, current);
         }
 
         // Bubble up the object to its correct position
@@ -62,7 +62,7 @@ public class MinHeap {
         Object min = heap.get(0);
         if (min instanceof GatorTicketMaster.WaitlistEntry) {
             // Remove the userID from the map
-            idToPositionMap.remove(((GatorTicketMaster.WaitlistEntry) min).userID);
+            userIndexMap.remove(((GatorTicketMaster.WaitlistEntry) min).userID);
         }
 
         // Get the last element from the heap
@@ -72,7 +72,7 @@ public class MinHeap {
             heap.set(0, heap.get(lastIdx));
             if (heap.get(0) instanceof GatorTicketMaster.WaitlistEntry) {
                 // Update the map to reflect the new position of the element
-                idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(0)).userID, 0);
+                userIndexMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(0)).userID, 0);
             }
         }
 
@@ -94,9 +94,9 @@ public class MinHeap {
     private void demoteElement(int index) {
         int heapSize = heap.size();
         while (true) {
-            int smallest = index;
-            int leftNode = 2 * index + 1;
-            int rightNode = 2 * index + 2;
+            int smallest    = index;
+            int leftNode    = 2 * index + 1;
+            int rightNode   = 2 * index + 2;
 
             // Find the smallest child of the current element
             if (leftNode < heapSize && compare(heap.get(leftNode), heap.get(smallest)) < 0) {
@@ -159,10 +159,10 @@ public class MinHeap {
 
         // Update the map to reflect the new indices of the elements
         if (heap.get(i) instanceof GatorTicketMaster.WaitlistEntry) {
-            idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(i)).userID, i);
+            userIndexMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(i)).userID, i);
         }
         if (heap.get(j) instanceof GatorTicketMaster.WaitlistEntry) {
-            idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(j)).userID, j);
+            userIndexMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(j)).userID, j);
         }
     }
 
@@ -173,7 +173,7 @@ public class MinHeap {
      * @return true if the user was found and removed, otherwise false
      */
     public boolean remove(int userID) {
-        Integer index = idToPositionMap.get(userID);
+        Integer index = userIndexMap.get(userID);
         if (index == null) {
             return false;
         }
@@ -186,7 +186,7 @@ public class MinHeap {
         heap.remove(lastIdx);
 
         // Remove the user from the map
-        idToPositionMap.remove(userID);
+        userIndexMap.remove(userID);
 
         // If the user was not at the root, we need to fix the heap
         if (index < heap.size()) {
@@ -210,14 +210,14 @@ public class MinHeap {
      * @return true if the user was found and updated, otherwise false
      */
     public boolean updatePriority(int userID, int newPriority) {
-        Integer index = idToPositionMap.get(userID);
+        Integer index = userIndexMap.get(userID);
         if (index == null) {
             return false;
         }
 
         GatorTicketMaster.WaitlistEntry entry = (GatorTicketMaster.WaitlistEntry) heap.get(index);
         int oldPriority = entry.priority;
-        entry.priority = newPriority;
+        entry.priority  = newPriority;
 
         // If the new priority is lower than the old priority, demote the element
         if (newPriority < oldPriority) {

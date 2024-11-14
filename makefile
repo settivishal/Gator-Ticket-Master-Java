@@ -19,10 +19,15 @@ compile:
 
 # Optional: Run with a specific input file
 # Usage: make run INPUT_FILE=input_1_test_case.txt
-run:
+run: compile 
 	$(JAVA) $(MAIN_CLASS) $(INPUT_FILE)
 
 clean:
-	del /F /Q *.class *output_file.txt 2>nul
+ifeq ($(OS),Windows_NT)
+	del /F /Q *.class 2>nul || true
+	del /F /Q *output_file.txt 2>nul || true
+else
+	rm -f *.class *output_file.txt
+endif
 
 .PHONY: all compile run clean
