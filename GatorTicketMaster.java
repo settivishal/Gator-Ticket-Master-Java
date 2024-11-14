@@ -2,17 +2,17 @@ import java.io.*;
 import java.util.*;
 
 class GatorTicketMaster {
-    private RedBlackTree reservations;
+    private RedBlackTree seatReservations;
     private MinHeap waitlist;
     private MinHeap availableSeats;
-    private int totalSeats;
-    private static PrintWriter outputWriter;
+    private int totalSeatCount;
+    private static PrintWriter outputStream;
 
     public GatorTicketMaster(String outputFile) throws IOException {
-        reservations = new RedBlackTree();
-        waitlist = new MinHeap();
-        availableSeats = new MinHeap();
-        outputWriter = new PrintWriter(new FileWriter(outputFile));
+        seatReservations    = new RedBlackTree();
+        waitlist            = new MinHeap();
+        availableSeats      = new MinHeap();
+        outputStream        = new PrintWriter(new FileWriter(outputFile));
     }
 
     // Node class for waitlist entries
@@ -22,9 +22,9 @@ class GatorTicketMaster {
         long timestamp;
 
         public WaitlistEntry(int userID, int priority) {
-            this.userID = userID;
-            this.priority = priority;
-            this.timestamp = System.nanoTime();
+            this.userID     = userID;
+            this.priority   = priority;
+            this.timestamp  = System.nanoTime();
         }
 
         @Override
@@ -42,23 +42,23 @@ class GatorTicketMaster {
      */
     public void initialize(int seatCount) {
         if (seatCount <= 0) {
-            outputWriter.println("Invalid input. Please provide a valid number of seats.");
+            outputStream.println("Invalid input. Please provide a valid number of seats.");
             return;
         }
 
-        totalSeats = seatCount;
+        totalSeatCount = seatCount;
         for (int i = 1; i <= seatCount; i++) {
             // Add each seat to the heap
             availableSeats.insert(i);
         }
-        outputWriter.println(seatCount + " Seats are made available for reservation");
+        outputStream.println(seatCount + " Seats are made available for reservation");
     }
 
     /**
      * Prints the number of seats available and the number of users in the waitlist
      */
     public void available() {
-        outputWriter.println("Total Seats Available : " + availableSeats.size() + ", Waitlist : " + waitlist.size());
+        outputStream.println("Total Seats Available : " + availableSeats.size() + ", Waitlist : " + waitlist.size());
     }
 
     /**
@@ -70,12 +70,12 @@ class GatorTicketMaster {
         // If there are available seats, assign one to the user
         if (!availableSeats.isEmpty()) {
             int seatID = (int) availableSeats.extractMin();
-            reservations.insert(userID, seatID);
-            outputWriter.println("User " + userID + " reserved seat " + seatID);
+            seatReservations.insert(userID, seatID);
+            outputStream.println("User " + userID + " reserved seat " + seatID);
         } else {
             // Otherwise, add the user to the waitlist
             waitlist.insert(new WaitlistEntry(userID, userPriority));
-            outputWriter.println("User " + userID + " is added to the waiting list");
+            outputStream.println("User " + userID + " is added to the waiting list");
         }
     }
 
@@ -87,29 +87,29 @@ class GatorTicketMaster {
      */
     public void cancel(int seatID, int userID) {
         // Find the seat with the given userID
-        RedBlackTree.Node node = reservations.findNode(userID);
+        RedBlackTree.Node node = seatReservations.findNode(userID);
 
         // User has no reservation to cancel
         if (node == null) {
-            outputWriter.println("User " + userID + " has no reservation to cancel");
+            outputStream.println("User " + userID + " has no reservation to cancel");
             return;
         }
 
         // User has no reservation for the given seat to cancel
         if (node.seatID != seatID) {
-            outputWriter.println("User " + userID + " has no reservation for seat " + seatID + " to cancel");
+            outputStream.println("User " + userID + " has no reservation for seat " + seatID + " to cancel");
             return;
         }
 
         // Delete the seat from the tree
-        reservations.deleteNode(userID);
-        outputWriter.println("User " + userID + " canceled their reservation");
+        seatReservations.deleteNode(userID);
+        outputStream.println("User " + userID + " canceled their reservation");
 
         // If there are users in the waitlist, assign the new seat to the user with the highest priority
         if (!waitlist.isEmpty()) {
             WaitlistEntry entry = (WaitlistEntry) waitlist.extractMin();
-            reservations.insert(entry.userID, seatID);
-            outputWriter.println("User " + entry.userID + " reserved seat " + seatID);
+            seatReservations.insert(entry.userID, seatID);
+            outputStream.println("User " + entry.userID + " reserved seat " + seatID);
         } else {
             // Otherwise, add the seat back to the available seats
             availableSeats.insert(seatID);
@@ -122,9 +122,9 @@ class GatorTicketMaster {
      */
     public void exitWaitlist(int userID) {
         if (waitlist.remove(userID)) {
-            outputWriter.println("User " + userID + " is removed from the waiting list");
+            outputStream.println("User " + userID + " is removed from the waiting list");
         } else {
-            outputWriter.println("User " + userID + " is not in waitlist");
+            outputStream.println("User " + userID + " is not in waitlist");
         }
     }
 
@@ -135,9 +135,9 @@ class GatorTicketMaster {
      */
     public void updatePriority(int userID, int newPriority) {
         if (waitlist.updatePriority(userID, newPriority)) {
-            outputWriter.println("User " + userID + " priority has been updated to " + newPriority);
+            outputStream.println("User " + userID + " priority has been updated to " + newPriority);
         } else {
-            outputWriter.println("User " + userID + " priority is not updated");
+            outputStream.println("User " + userID + " priority is not updated");
         }
     }
 
@@ -149,25 +149,25 @@ class GatorTicketMaster {
      */
     public void addSeats(int count) {
         if (count <= 0) {
-            outputWriter.println("Invalid input. Please provide a valid number of seats.");
+            outputStream.println("Invalid input. Please provide a valid number of seats.");
             return;
         }
 
-        outputWriter.println("Additional " + count + " Seats are made available for reservation");
+        outputStream.println("Additional " + count + " Seats are made available for reservation");
 
-        int startSeat = totalSeats + 1;
-        // System.out.println("totalSeats: " + totalSeats);
+        int startSeat = totalSeatCount + 1;
+        // System.out.println("total seat Count: " + totalSeatCount);
         // System.out.println("count: " + count);
-        totalSeats += count;
+        totalSeatCount += count;
 
         // Loop through the new seats and assign them to the highest priority users in the waitlist
         // If there are no users in the waitlist, add the seats to the available seats
-        for (int i = startSeat; i <= totalSeats; i++) {
+        for (int i = startSeat; i <= totalSeatCount; i++) {
             if (!waitlist.isEmpty()) {
                 WaitlistEntry entry = (WaitlistEntry) waitlist.extractMin();
                 // System.out.println("entry: " + entry.userID);
-                reservations.insert(entry.userID, i);
-                outputWriter.println("User " + entry.userID + " reserved seat " + i);
+                seatReservations.insert(entry.userID, i);
+                outputStream.println("User " + entry.userID + " reserved seat " + i);
             } else {
                 availableSeats.insert(i);
             }
@@ -175,18 +175,18 @@ class GatorTicketMaster {
     }
 
     /**
-     * Prints the current reservations in the system, sorted by seat ID
+     * Prints the current reservations in the system sorted by seat ID
      */
     public void printReservations() {
-        // Get the list of reservations from the Red Black Tree
-        List<RedBlackTree.Node> nodes = reservations.inorderTraversal();
+        // Get the list of seatReservations from the Red Black Tree
+        List<RedBlackTree.Node> nodes = seatReservations.inorderTraversal();
         
         // Sort the list by seat ID
         nodes.sort((a, b) -> Integer.compare(a.seatID, b.seatID));
         
         // Print the sorted list
         for (RedBlackTree.Node node : nodes) {
-            outputWriter.println("Seat " + node.seatID + ", User " + node.userID);
+            outputStream.println("Seat " + node.seatID + ", User " + node.userID);
         }
     }
 
@@ -199,7 +199,7 @@ class GatorTicketMaster {
      */
     public void releaseSeats(int userID1, int userID2) {
         if (userID1 > userID2) {
-            outputWriter.println("Invalid input. Please provide a valid range of users.");
+            outputStream.println("Invalid input. Please provide a valid range of users.");
             return;
         }
 
@@ -207,10 +207,10 @@ class GatorTicketMaster {
 
         // Collect all seats that will be released
         for (int userID = userID1; userID <= userID2; userID++) {
-            RedBlackTree.Node node = reservations.findNode(userID);
+            RedBlackTree.Node node = seatReservations.findNode(userID);
             if (node != null) {
                 releasedSeats.add(node.seatID);
-                reservations.deleteNode(userID);
+                seatReservations.deleteNode(userID);
             }
 
             // Remove the user from the waitlist
@@ -219,21 +219,20 @@ class GatorTicketMaster {
 
         // Waitlist is empty
         if (waitlist.isEmpty()) {
-            outputWriter.println("Reservations/waitlist of the users in the range [" + userID1 + ", " + userID2+ "] have been released");
+            outputStream.println("Reservations/waitlist of the users in the range [" + userID1 + ", " + userID2+ "] have been released");
 
             // Add released seats back to available seats
             for (int seatID : releasedSeats) {
                 availableSeats.insert(seatID);
             }
         } else { // Waitlist is not empty
-            outputWriter
-                    .println("Reservations of the Users in the range [" + userID1 + ", " + userID2 + "] are released");
+            outputStream.println("Reservations of the Users in the range [" + userID1 + ", " + userID2 + "] are released");
 
             for (int seatID : releasedSeats) {
                 if (!waitlist.isEmpty()) {
                     WaitlistEntry entry = (WaitlistEntry) waitlist.extractMin();
-                    reservations.insert(entry.userID, seatID);
-                    outputWriter.println("User " + entry.userID + " reserved seat " + seatID);
+                    seatReservations.insert(entry.userID, seatID);
+                    outputStream.println("User " + entry.userID + " reserved seat " + seatID);
                 } else {
                     availableSeats.insert(seatID);
                 }
@@ -247,10 +246,10 @@ class GatorTicketMaster {
      */
     public void quit() {
         // Print termination message
-        outputWriter.print("Program Terminated!!");
+        outputStream.print("Program Terminated!!");
         
         // Close the output writer to release resources
-        outputWriter.close();
+        outputStream.close();
     }
 
     /**
@@ -263,12 +262,12 @@ class GatorTicketMaster {
             return;
         }
 
-        String inputFile = args[0];
-        String outputFile = inputFile.substring(0, inputFile.lastIndexOf('.')) + "_output_file.txt";
+        String inputFile    = args[0];
+        String outputFile   = inputFile.substring(0, inputFile.lastIndexOf('.')) + "_output_file.txt";
 
         try {
-            GatorTicketMaster ticketMaster = new GatorTicketMaster(outputFile);
-            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            GatorTicketMaster ticketMaster  = new GatorTicketMaster(outputFile);
+            BufferedReader reader           = new BufferedReader(new FileReader(inputFile));
             String line;
 
             // Read the input file line by line
@@ -313,26 +312,25 @@ class GatorTicketMaster {
                         ticketMaster.addSeats(Integer.parseInt(parts[1].trim()));
                         break;
                     case "PrintReservations":
-                        // Print the current reservations in the system, sorted by seat ID
+                        // Print the current seatReservations in the system, sorted by seat ID
                         ticketMaster.printReservations();
                         break;
                     case "ReleaseSeats":
-                        ticketMaster.releaseSeats(
                         // Release the seats reserved by users in the given range
-                                Integer.parseInt(parts[1].trim()),
-                                Integer.parseInt(parts[2].trim()));
+                        ticketMaster.releaseSeats(Integer.parseInt(parts[1].trim()), Integer.parseInt(parts[2].trim()));
                         break;
                     case "Quit":
-                        ticketMaster.quit();
                         // Terminate the program
+                        ticketMaster.quit();
                         return;
                 }
             }
             // ticketMaster.quit();
             // Close the output writer to release resources
-            outputWriter.close();
+            outputStream.close();
             reader.close();
-        } catch (IOException e) { // Error handling
+        } catch (IOException e) { 
+            // Error handling
             System.err.println("Error processing the file: " + e.getMessage());
         }
     }
