@@ -1,2 +1,3 @@
 *.class
 *output_file.txt
+*.vscode

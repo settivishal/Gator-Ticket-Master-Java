@@ -6,16 +6,15 @@ import java.util.Map;
 
 public class MinHeap {
     private ArrayList<Object> heap;
-    private Map<Integer, Integer> userIndices; // Maps userID to index in heap
+    private Map<Integer, Integer> idToPositionMap; // Maps userID to index in heap
 
     public MinHeap() {
         heap = new ArrayList<>();
-        userIndices = new HashMap<>();
+        idToPositionMap = new HashMap<>();
     }
 
     /**
      * Inserts the given object into the heap
-     *
      * @param obj the object to insert
      */
     public void insert(Object obj) {
@@ -25,100 +24,103 @@ public class MinHeap {
 
         // If the object is a WaitlistEntry, add its userID to the map
         if (obj instanceof GatorTicketMaster.WaitlistEntry) {
-            userIndices.put(((GatorTicketMaster.WaitlistEntry) obj).userID, current);
+            idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) obj).userID, current);
         }
 
         // Bubble up the object to its correct position
-        bubbleUp(current);
+        promoteElement(current);
     }
 
     /**
-     * Bubbles up the object at the given index to its correct position in the heap
-     * @param current the index of the object to bubble up
+     * Promotes the element at the given index up the heap by swapping it with its parent if the parent is larger.
+     * @param current the index of the element to promote
      */
-    private void bubbleUp(int current) {
-        // Continue bubbling up until the object is in its correct position
+    private void promoteElement(int current) {
+        // Keep track of the current index
         while (current > 0) {
             int parent = (current - 1) / 2;
+            // If the parent is larger than the current element, swap them
             if (compare(heap.get(current), heap.get(parent)) >= 0) {
                 break;
             }
-            // Swap the object with its parent
             swap(current, parent);
+            // Update the current index
             current = parent;
         }
     }
 
     /**
-     * Removes and returns the minimum element of the heap
-     * @return the minimum element of the heap, or null if the heap is empty
+     * Extracts the minimum element from the heap and returns it.
+     * @return the minimum element from the heap, or null if the heap is empty
      */
     public Object extractMin() {
         if (heap.isEmpty()) {
             return null;
         }
 
+        // Get the minimum element from the top of the heap
         Object min = heap.get(0);
-        // Remove the user from the map
         if (min instanceof GatorTicketMaster.WaitlistEntry) {
-            userIndices.remove(((GatorTicketMaster.WaitlistEntry) min).userID);
+            // Remove the userID from the map
+            idToPositionMap.remove(((GatorTicketMaster.WaitlistEntry) min).userID);
         }
 
+        // Get the last element from the heap
         int lastIdx = heap.size() - 1;
         if (lastIdx > 0) {
-            // Swap the last element with the root
+            // Replace the minimum element with the last element
             heap.set(0, heap.get(lastIdx));
-            // Add the new root to the map
             if (heap.get(0) instanceof GatorTicketMaster.WaitlistEntry) {
-                userIndices.put(((GatorTicketMaster.WaitlistEntry) heap.get(0)).userID, 0);
+                // Update the map to reflect the new position of the element
+                idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(0)).userID, 0);
             }
         }
-        // Remove the last element
+
+        // Remove the last element from the heap
         heap.remove(lastIdx);
 
+        // If the heap is not empty, demote the new element to its correct position
         if (!heap.isEmpty()) {
-            // Heapify the root
-            heapify(0);
+            demoteElement(0);
         }
 
         return min;
     }
 
     /**
-     * Heapify the element at the given index
-     * @param idx the index of the element to heapify
+     * Demotes the element at the given index down the heap by swapping it with its smallest child if the child is smaller.
+     * @param index the index of the element to demote
      */
-    private void heapify(int idx) {
-        int size = heap.size();
+    private void demoteElement(int index) {
+        int heapSize = heap.size();
         while (true) {
-            int smallest = idx;
-            int left = 2 * idx + 1;
-            int right = 2 * idx + 2;
+            int smallest = index;
+            int leftNode = 2 * index + 1;
+            int rightNode = 2 * index + 2;
 
-            // Check if the left child is smaller than the current element
-            if (left < size && compare(heap.get(left), heap.get(smallest)) < 0) {
-                smallest = left;
+            // Find the smallest child of the current element
+            if (leftNode < heapSize && compare(heap.get(leftNode), heap.get(smallest)) < 0) {
+                smallest = leftNode;
             }
 
-            // Check if the right child is smaller than the current element
-            if (right < size && compare(heap.get(right), heap.get(smallest)) < 0) {
-                smallest = right;
+            if (rightNode < heapSize && compare(heap.get(rightNode), heap.get(smallest)) < 0) {
+                smallest = rightNode;
             }
 
-            // If the smallest is the current element, break the loop
-            if (smallest == idx) {
+            // If the smallest child is the current element, break the loop
+            if (smallest == index) {
                 break;
             }
 
-            // Swap the elements at the smallest and current indices
-            swap(idx, smallest);
-            idx = smallest;
+            // Swap the current element with its smallest child
+            swap(index, smallest);
+            // Update the current index
+            index = smallest;
         }
     }
 
     /**
      * Compares two objects which can either be Integers or WaitlistEntry instances.
-     * 
      * @param a the first object to compare
      * @param b the second object to compare
      * @return a negative integer, zero, or a positive integer if the first argument is less than, equal to, or greater than the second
@@ -157,39 +159,45 @@ public class MinHeap {
 
         // Update the map to reflect the new indices of the elements
         if (heap.get(i) instanceof GatorTicketMaster.WaitlistEntry) {
-            userIndices.put(((GatorTicketMaster.WaitlistEntry) heap.get(i)).userID, i);
+            idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(i)).userID, i);
         }
         if (heap.get(j) instanceof GatorTicketMaster.WaitlistEntry) {
-            userIndices.put(((GatorTicketMaster.WaitlistEntry) heap.get(j)).userID, j);
+            idToPositionMap.put(((GatorTicketMaster.WaitlistEntry) heap.get(j)).userID, j);
         }
     }
 
     /**
-     * Removes the element with the given user ID from the heap
-     * @param userID the user ID of the element to remove
-     * @return true if the element was found and removed, false otherwise
+     * Removes the user with the given user ID from the heap.
+     * If the user is found, it is removed from the heap and the map is updated.
+     * @param userID the user ID of the user to remove
+     * @return true if the user was found and removed, otherwise false
      */
     public boolean remove(int userID) {
-        Integer index = userIndices.get(userID);
+        Integer index = idToPositionMap.get(userID);
         if (index == null) {
             return false;
         }
 
+        // Swap the user to be removed with the last element in the heap
         int lastIdx = heap.size() - 1;
         swap(index, lastIdx);
-        heap.remove(lastIdx);
-        userIndices.remove(userID);
 
-        // Check if the element is still in the heap
+        // Remove the last element from the heap
+        heap.remove(lastIdx);
+
+        // Remove the user from the map
+        idToPositionMap.remove(userID);
+
+        // If the user was not at the root, we need to fix the heap
         if (index < heap.size()) {
             int parent = (index - 1) / 2;
-            // If the element is smaller than its parent, bubble it up
+            // If the user was smaller than its parent, promote it
             if (index > 0 && compare(heap.get(index), heap.get(parent)) < 0) {
-                bubbleUp(index);
+                promoteElement(index);
             }
-            // Otherwise, heapify the element
+            // Otherwise, demote it
             else {
-                heapify(index);
+                demoteElement(index);
             }
         }
         return true;
@@ -199,10 +207,10 @@ public class MinHeap {
      * Updates the priority of the user with the given user ID
      * @param userID the user ID of the user to update
      * @param newPriority the new priority of the user
-     * @return true if the user was found and updated, false otherwise
+     * @return true if the user was found and updated, otherwise false
      */
     public boolean updatePriority(int userID, int newPriority) {
-        Integer index = userIndices.get(userID);
+        Integer index = idToPositionMap.get(userID);
         if (index == null) {
             return false;
         }
@@ -211,21 +219,20 @@ public class MinHeap {
         int oldPriority = entry.priority;
         entry.priority = newPriority;
 
-        // If the new priority is higher than the old priority, bubble the element up
+        // If the new priority is lower than the old priority, demote the element
         if (newPriority < oldPriority) {
-            heapify(index);
+            demoteElement(index);
         }
-        // Otherwise, heapify the element
+        // Otherwise, promote the element
         else {
-            bubbleUp(index);
+            promoteElement(index);
         }
         return true;
     }
 
     /**
-     * Checks if the heap is empty.
-     * 
-     * @return true if the heap is empty, false otherwise
+     * Checks if the heap is empty
+     * @return true if the heap is empty, otherwise false
      */
     public boolean isEmpty() {
         return heap.isEmpty();
@@ -233,7 +240,6 @@ public class MinHeap {
 
     /**
      * Returns the number of elements currently in the heap.
-     * 
      * @return the size of the heap
      */
     public int size() {

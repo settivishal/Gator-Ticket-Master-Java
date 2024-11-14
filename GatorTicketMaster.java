@@ -79,27 +79,39 @@ class GatorTicketMaster {
         }
     }
 
-    // Cancel the reservation
+    /**
+     * Cancel the reservation of the user for the given seat
+     * If the user has no reservation, print an error message
+     * @param seatID the ID of the seat to cancel the reservation
+     * @param userID the ID of the user to cancel the reservation
+     */
     public void cancel(int seatID, int userID) {
+        // Find the seat with the given userID
         RedBlackTree.Node node = reservations.find(userID);
+
+        // User has no reservation to cancel
         if (node == null) {
             outputWriter.println("User " + userID + " has no reservation to cancel");
             return;
         }
 
+        // User has no reservation for the given seat to cancel
         if (node.seatID != seatID) {
             outputWriter.println("User " + userID + " has no reservation for seat " + seatID + " to cancel");
             return;
         }
 
+        // Delete the seat from the tree
         reservations.delete(userID);
         outputWriter.println("User " + userID + " canceled their reservation");
 
+        // If there are users in the waitlist, assign the new seat to the user with the highest priority
         if (!waitlist.isEmpty()) {
             WaitlistEntry entry = (WaitlistEntry) waitlist.extractMin();
             reservations.insert(entry.userID, seatID);
             outputWriter.println("User " + entry.userID + " reserved seat " + seatID);
         } else {
+            // Otherwise, add the seat back to the available seats
             availableSeats.insert(seatID);
         }
     }
@@ -231,8 +243,7 @@ class GatorTicketMaster {
 
     /**
      * Terminates the program and closes the output writer.
-     * This method ensures that all resources are properly released and the 
-     * output file is closed before the program exits.
+     * This method ensures that all resources are properly released and the output file is closed before the program exits.
      */
     public void quit() {
         // Print termination message
@@ -322,7 +333,7 @@ class GatorTicketMaster {
             outputWriter.close();
             reader.close();
         } catch (IOException e) { // Error handling
-            System.err.println("Error processing file: " + e.getMessage());
+            System.err.println("Error processing the file: " + e.getMessage());
         }
     }
 }
