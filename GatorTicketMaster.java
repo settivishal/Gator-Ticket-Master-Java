@@ -87,7 +87,7 @@ class GatorTicketMaster {
      */
     public void cancel(int seatID, int userID) {
         // Find the seat with the given userID
-        RedBlackTree.Node node = reservations.find(userID);
+        RedBlackTree.Node node = reservations.findNode(userID);
 
         // User has no reservation to cancel
         if (node == null) {
@@ -102,7 +102,7 @@ class GatorTicketMaster {
         }
 
         // Delete the seat from the tree
-        reservations.delete(userID);
+        reservations.deleteNode(userID);
         outputWriter.println("User " + userID + " canceled their reservation");
 
         // If there are users in the waitlist, assign the new seat to the user with the highest priority
@@ -207,10 +207,10 @@ class GatorTicketMaster {
 
         // Collect all seats that will be released
         for (int userID = userID1; userID <= userID2; userID++) {
-            RedBlackTree.Node node = reservations.find(userID);
+            RedBlackTree.Node node = reservations.findNode(userID);
             if (node != null) {
                 releasedSeats.add(node.seatID);
-                reservations.delete(userID);
+                reservations.deleteNode(userID);
             }
 
             // Remove the user from the waitlist

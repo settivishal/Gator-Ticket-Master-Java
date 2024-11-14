@@ -119,27 +119,24 @@ public class RedBlackTree {
             parent.right = node; // New node is the right child
         }
 
-        // Fix the tree balance after insertion
-        fixInsert(node);
+        // Rebalance the tree after insertion
+        rebalanceTreeAfterInsert(node);
     }
 
     /**
-     * Fixes the tree balance after a node is inserted. The tree is
-     * self-balancing, meaning that the color of the nodes is adjusted
-     * to ensure that the tree remains balanced.
-     *
+     * Rebalance the tree after a node is inserted. The tree is self-balancing, meaning that the color of the nodes is adjusted to ensure that the tree remains balanced.
      * @param node the inserted node
      */
-    private void fixInsert(Node node) {
+    private void rebalanceTreeAfterInsert(Node node) {
         while (node != root && node.parent.color == RED) {
             // If the parent is the left child of the grandparent
             if (node.parent == node.parent.parent.left) {
-                Node uncle = node.parent.parent.right;
+                Node siblingOfParent = node.parent.parent.right;
 
-                // If the uncle is also red, change the parent and uncle to black, and the grandparent to red. Move the node up one level to the grandparent.
-                if (uncle != null && uncle.color == RED) {
+                // If the sibling of the parent is also red, change the parent and its sibling to black, and the grandparent to red. Move the node up one level to the grandparent.
+                if (siblingOfParent != null && siblingOfParent.color == RED) {
                     node.parent.color = BLACK;
-                    uncle.color = BLACK;
+                    siblingOfParent.color = BLACK;
                     node.parent.parent.color = RED;
                     node = node.parent.parent;
                 } else {
@@ -155,11 +152,11 @@ public class RedBlackTree {
                 }
             } else {
                 // If the parent is the right child of the grandparent, do the same as above, but with the colors reversed.
-                Node uncle = node.parent.parent.left;
+                Node siblingOfParent = node.parent.parent.left;
 
-                if (uncle != null && uncle.color == RED) {
+                if (siblingOfParent != null && siblingOfParent.color == RED) {
                     node.parent.color = BLACK;
-                    uncle.color = BLACK;
+                    siblingOfParent.color = BLACK;
                     node.parent.parent.color = RED;
                     node = node.parent.parent;
                 } else {
@@ -182,7 +179,7 @@ public class RedBlackTree {
      * @param userID the user ID to search for
      * @return the node with the given user ID, or null if no such node exists
      */
-    public Node find(int userID) {
+    public Node findNode(int userID) {
         Node current = root;
         while (current != null) {
             // If the user ID of the current node is equal to the given user ID,
@@ -202,65 +199,62 @@ public class RedBlackTree {
 
     /**
      * Deletes the node with the specified userID from the tree.
-     * 
      * @param userID the ID of the user whose node is to be deleted
      */
-    public void delete(int userID) {
+    public void deleteNode(int userID) {
         // Find the node with the given userID
-        Node node = find(userID);
+        Node node = findNode(userID);
         if (node == null)
             return;
 
-        Node x, y;
-        // Determine the node to be removed (y)
+        Node replacementChild, nodeToRemove;
+        // Determine the node to be removed
         if (node.left == null || node.right == null) {
-            y = node;
+            nodeToRemove = node;
         } else {
-            y = successor(node);
+            nodeToRemove = successorNode(node);
         }
 
-        // Set x to the non-null child of y, if any
-        if (y.left != null) {
-            x = y.left;
+        // Set replacementChild to the non-null child of nodeToRemove, if any
+        if (nodeToRemove.left != null) {
+            replacementChild = nodeToRemove.left;
         } else {
-            x = y.right;
+            replacementChild = nodeToRemove.right;
         }
 
         // Update parent references
-        if (x != null) {
-            x.parent = y.parent;
+        if (replacementChild != null) {
+            replacementChild.parent = nodeToRemove.parent;
         }
 
         // Update the root if necessary
-        if (y.parent == null) {
-            root = x;
-        } else if (y == y.parent.left) {
-            y.parent.left = x;
+        if (nodeToRemove.parent == null) {
+            root = replacementChild;
+        } else if (nodeToRemove == nodeToRemove.parent.left) {
+            nodeToRemove.parent.left = replacementChild;
         } else {
-            y.parent.right = x;
+            nodeToRemove.parent.right = replacementChild;
         }
 
-        // Copy y's data to the node if necessary
-        if (y != node) {
-            node.userID = y.userID;
-            node.seatID = y.seatID;
+        // Copy nodeToRemove's data to the node if necessary
+        if (nodeToRemove != node) {
+            node.userID = nodeToRemove.userID;
+            node.seatID = nodeToRemove.seatID;
         }
 
-        // Fix the tree balance if y was black
-        if (y.color == BLACK) {
-            fixDelete(x, y.parent);
+        // Fix the tree balance if nodeToRemove was black
+        if (nodeToRemove.color == BLACK) {
+            rebalanceTreeAfterDelete(replacementChild, nodeToRemove.parent);
         }
     }
 
     /**
      * Finds the successor of a given node in the tree.
-     * If the node has a right child, the successor is the leftmost node in the right subtree.
-     * Otherwise, the successor is the parent of the node, or one of its parents if the node is the rightmost node in its subtree.
-     * 
+     * If the node has a right child, the successor is the leftmost node in the right subtree. Otherwise, the successor is the parent of the node, or one of its parents if the node is the rightmost node in its subtree.
      * @param node the node to find the successor of
      * @return the successor of the node
      */
-    private Node successor(Node node) {
+    private Node successorNode(Node node) {
         if (node.right != null) {
             // If the node has a right child, the successor is the leftmost node in the right subtree
             node = node.right;
@@ -280,89 +274,82 @@ public class RedBlackTree {
     }
 
     /**
-     * Fixes the tree balance after a node is deleted. The tree is
-     * self-balancing, meaning that the color of the nodes is adjusted
-     * to ensure that the tree remains balanced.
-     * 
+     * Rebalances the tree after a node is deleted. The tree is self-balancing, meaning that the color of the nodes is adjusted to ensure that the tree remains balanced.
      * @param node the node to fix the tree balance for
      * @param parent the parent of the node
      */
-    private void fixDelete(Node node, Node parent) {
+    private void rebalanceTreeAfterDelete(Node node, Node parent) {
         while (node != root && (node == null || node.color == BLACK)) {
             if (node == parent.left) {
-                // If the node is the left child of the parent, get the right sibling
-                Node sibling = parent.right;
+                // If the node is the left child of the parent, get the right sibling node
+                Node siblingNode = parent.right;
 
-                if (sibling.color == RED) {
-                    // If the sibling is red, swap the colors of the parent and sibling
-                    sibling.color = BLACK;
+                if (siblingNode.color == RED) {
+                    // If the sibling node is red, swap the colors of the parent and sibling node
+                    siblingNode.color = BLACK;
                     parent.color = RED;
                     rotateLeft(parent);
-                    sibling = parent.right;
+                    siblingNode = parent.right;
                 }
 
-                // If the sibling is black, check if the sibling has a red child
-                if ((sibling.left == null || sibling.left.color == BLACK) &&
-                        (sibling.right == null || sibling.right.color == BLACK)) {
-                    sibling.color = RED;
-                    // If the sibling has no red children, color the sibling red
+                // If the sibling node is black, check if the sibling node has a red child
+                if ((siblingNode.left == null || siblingNode.left.color == BLACK) &&
+                        (siblingNode.right == null || siblingNode.right.color == BLACK)) {
+                    siblingNode.color = RED;
+                    // If the sibling node has no red children, color the sibling node red
                     node = parent;
                     parent = node.parent;
                 } else {
-                    if (sibling.right == null || sibling.right.color == BLACK) {
-                        if (sibling.left != null) {
-                        // If the sibling's right child is black, color the sibling's left child black
-                            sibling.left.color = BLACK;
+                    if (siblingNode.right == null || siblingNode.right.color == BLACK) {
+                        if (siblingNode.left != null) {
+                        // If the sibling node's right child is black, color the sibling node's left child black
+                            siblingNode.left.color = BLACK;
                         }
-                        sibling.color = RED;
-                        rotateRight(sibling);
-                        sibling = parent.right;
+                        siblingNode.color = RED;
+                        rotateRight(siblingNode);
+                        siblingNode = parent.right;
                     }
-                    sibling.color = parent.color;
+                    siblingNode.color = parent.color;
 
-                    // Swap the colors of the parent and sibling
+                    // Swap the colors of the parent and sibling node
                     parent.color = BLACK;
-                    if (sibling.right != null) {
-                        sibling.right.color = BLACK;
+                    if (siblingNode.right != null) {
+                        siblingNode.right.color = BLACK;
                     }
                     rotateLeft(parent);
                     node = root;
                 }
             } else {
-                Node sibling = parent.left;
-                // If the node is the right child of the parent, get the left sibling
+                Node siblingNode = parent.left;
+                // If the node is the right child of the parent, get the left sibling node
 
-                if (sibling.color == RED) {
-                    sibling.color = BLACK;
-                    // If the sibling is red, swap the colors of the parent and sibling
+                if (siblingNode.color == RED) {
+                    siblingNode.color = BLACK;
+                    // If the sibling node is red, swap the colors of the parent and sibling node
                     parent.color = RED;
                     rotateRight(parent);
-                    sibling = parent.left;
+                    siblingNode = parent.left;
                 }
 
-                if ((sibling.right == null || sibling.right.color == BLACK) &&
-                // If the sibling is black, check if the sibling has a red child
-                        (sibling.left == null || sibling.left.color == BLACK)) {
-                    sibling.color = RED;
-                    // If the sibling has no red children, color the sibling red
+                if ((siblingNode.right == null || siblingNode.right.color == BLACK) &&(siblingNode.left == null || siblingNode.left.color == BLACK)) {
+                    siblingNode.color = RED;
                     node = parent;
                     parent = node.parent;
                 } else {
-                    if (sibling.left == null || sibling.left.color == BLACK) {
-                        if (sibling.right != null) {
-                        // If the sibling's left child is black, color the sibling's right child black
-                            sibling.right.color = BLACK;
+                    if (siblingNode.left == null || siblingNode.left.color == BLACK) {
+                        if (siblingNode.right != null) {
+                            siblingNode.right.color = BLACK;
                         }
-                        sibling.color = RED;
-                        rotateLeft(sibling);
-                        sibling = parent.left;
+                        siblingNode.color = RED;
+                        rotateLeft(siblingNode);
+                        siblingNode = parent.left;
                     }
-                    sibling.color = parent.color;
+                    siblingNode.color = parent.color;
 
-                    // Swap the colors of the parent and sibling
+                    // Swap the colors of the parent and sibling node
                     parent.color = BLACK;
-                    if (sibling.left != null) {
-                        sibling.left.color = BLACK;
+                    if (siblingNode.left != null) {
+                        siblingNode.left.color = BLACK;
                     }
                     rotateRight(parent);
                     node = root;
@@ -377,7 +364,6 @@ public class RedBlackTree {
     /**
      * Performs an inorder traversal of the Red-Black Tree.
      * This method returns a list of nodes in the tree sorted by their in-order sequence.
-     *
      * @return a list of nodes in inorder traversal order
      */
     public List<Node> inorderTraversal() {
@@ -390,7 +376,6 @@ public class RedBlackTree {
     /**
      * Helper method for performing an inorder traversal of the Red-Black Tree.
      * This method recursively traverses the tree and adds each node to the result list.
-     * 
      * @param node the current node in the traversal
      * @param result the list of nodes to add to
      */
