@@ -198,6 +198,13 @@ class GatorTicketMaster {
      * @param userID2 the end of the user range
      */
     public void releaseSeats(int userID1, int userID2) {
+        // If User IDs are invalid
+        if (userID1 <= 0 || userID2 <= 0) {
+            outputStream.println("Invalid input. Please provide valid user IDs.");
+            return;
+        }
+
+        // If Range is invalid
         if (userID1 > userID2) {
             outputStream.println("Invalid input. Please provide a valid range of users.");
             return;
