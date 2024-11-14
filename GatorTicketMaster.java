@@ -333,7 +333,7 @@ class GatorTicketMaster {
             outputWriter.close();
             reader.close();
         } catch (IOException e) { // Error handling
-            System.err.println("Error processing file: " + e.getMessage());
+            System.err.println("Error processing the file: " + e.getMessage());
         }
     }
 }
