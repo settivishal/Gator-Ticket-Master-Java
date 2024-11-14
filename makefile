@@ -1,4 +1,4 @@
-# Comppiler and runtime variables
+# Compiler and runtime variables
 JAVAC = javac
 JAVA = java
 MAIN_CLASS = GatorTicketMaster
